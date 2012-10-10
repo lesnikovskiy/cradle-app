@@ -1,0 +1,1 @@
+This is a simple app that demonstrates simple crud application using cradle
