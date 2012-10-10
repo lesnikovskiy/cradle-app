@@ -5,7 +5,6 @@ var fs = require('fs');
 var cradle = require('cradle');
 var util = require('util');
 
-// listen on port 8000
 http.createServer(function(req, res) {	
 	var pathname = url.parse(req.url).pathname;
 	console.log(util.inspect(req.url));
