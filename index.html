@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title>single page app</title>
+	<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+	<style type="text/css">
+		fieldset {width:350px; margin:0 auto; border-radius:10px;}
+		label {display:block; clear:both; float:left; margin:2px; }
+		input[type=text] {display:block; float:right; width:200px; margin:2px;}
+		input[type=submit] {display:block; float:right; clear:both; margin:2px;}
+		table {width:500px; margin:0 auto;}
+		p#response {display:none; clear:both;}
+	</style>
+	<script type="text/javascript">
+	var getallgadgets = function() {
+		$.ajax({
+			type: 'POST',
+			data: {},
+			url: '/all_gadgets',
+			success: function(res) {			
+				var html = '';
+				html += '<tr>';
+				html += '<th>Name</th>';
+				html += '<th>Company</th>';
+				html += '<th></th>'
+				html += '</tr>';
+				for (var i = 0; i < res.length; i++) {
+					html += '<tr>';
+					html += '<td>' + res[i].value.name + '</td>';
+					html += '<td>' + res[i].value.company + '</td>';
+					html += '<td>';
+					html += '<a href="javascript:void(0);" class="edit" id="' + res[i].value.id + '" rev="' + res[i].value.rev + '">edit</a>';
+					html += '&nbsp;';
+					html += '<a href="javascript:void(0);" class="del" id="' + res[i].value.id + '" rev="' + res[i].value.rev + '">delete</a>';
+					html += '</td>';
+					html += '</tr>';
+				}
+				
+				$('#gadgets').html(html);
+			}
+		});
+	}
+	
+	$(document).ready(function() {
+		getallgadgets();
+	
+		$('#gadget-form').submit(function() {
+			$.ajax({
+				type: 'POST',
+				url: $(this).attr('action'),
+				data: $(this).serialize(),
+				success: function(response) {
+					if (response.error) {
+						$('#response').css({color: 'red'}).text('error occurred').fadeIn();
+						setTimeout(function() {
+							$('#response').fadeOut();
+						}, 3000);
+					}
+					
+					if (response.ok) {						
+						$('#gadget-form').attr('action', '/addgadget');
+						$('#gadget-form #_id, #gadget-form #_rev').remove();
+						$('#gadget-form #name, #gadget-form #company').val('');
+						
+						getallgadgets();
+					}
+				}
+			});
+		
+			return false;
+		});
+		
+		$('#gadgets a.edit').live('click', function() {
+			$.ajax({
+				type: 'POST',
+				data: 'id=' + encodeURIComponent($(this).attr('id')) + '&rev=' + encodeURIComponent($(this).attr('rev')),
+				url: '/getitem',
+				success: function(response) {
+					$('#name').val(response.name);
+					$('#company').val(response.company);
+					
+					$('#gadget-form #_id, #gadget-form #_rev').remove();					
+					
+					$('<input />', {type: 'hidden', value: response._id, name: '_id', id: '_id'}).appendTo('#gadget-form');
+					$('<input />', {type: 'hidden', value: response._rev, name: '_rev', id: '_rev'}).appendTo('#gadget-form');
+					
+					$('#gadget-form').attr('action', '/update');
+				}
+			});
+		
+			return false;
+		});
+	});
+	</script>
+</head>
+<body>
+	<fieldset>
+		<legend>Gadget</legend>
+		<form id="gadget-form" action="/addgadget" method="post">
+			<label for="name">Name:</label>
+			<input type="text" name="name" id="name" />
+			<label for="company">Company:</label>
+			<input type="text" name="company" id="company" />
+			<p id="response"></p>
+			<input type="submit" value="save" />
+		</form>
+	</fieldset>
+	<table id="gadgets"></table>
+</body>
+</html>
